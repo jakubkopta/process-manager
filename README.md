@@ -61,7 +61,7 @@ Install dev dependencies first: `pip install -r requirements-dev.txt`
 - **Lint:** `ruff check .`
 - **Type check:** `mypy monitor process_manager`
 
-GitHub Actions runs on push/PR to `main` or `master`: installs dependencies, runs migrations, tests, Ruff, and Mypy (see `.github/workflows/ci.yml`). Matrix: Python 3.10 and 3.12.
+GitHub Actions runs on push/PR to `main` or `master`: installs dependencies, runs migrations, tests, Ruff, and Mypy (see `.github/workflows/ci.yml`). Python version: 3.12.
 
 ## Project structure
 
