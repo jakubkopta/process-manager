@@ -11,7 +11,7 @@ A simple Django web app for remote monitoring and control of processes on the ma
 
 ## Requirements
 
-- Python 3.10+ (for SQLite JSON support)
+- Python 3.12+
 - See `requirements.txt` for dependencies (Django, psutil, openpyxl, etc.)
 
 ## Setup
