@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+    <h1 class="text-2xl font-semibold text-slate-800">Process Kill Log</h1>
+    <a href="{% url 'process_list' %}" class="text-sm font-medium text-indigo-600 hover:text-indigo-700 transition-colors">
+        ← Back to processes
+    </a>
+</div>
+
+<div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+    <div class="px-4 py-3 border-b border-slate-100 bg-slate-50/50">
+        <h2 class="text-sm font-medium text-slate-700">Kill activity</h2>
+    </div>
+    <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-slate-200">
+            <thead class="bg-slate-50">
+                <tr>
+                    <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Timestamp</th>
+                    <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Author</th>
+                    <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Process name</th>
+                    <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">PID</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+                {% for log in logs %}
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                    <td class="px-4 py-3 text-sm text-slate-700 whitespace-nowrap">
+                        {{ log.created_at|date:"Y-m-d H:i:s" }}
+                    </td>
+                    <td class="px-4 py-3 text-sm text-slate-700">
+                        {{ log.author.get_username }}
+                    </td>
+                    <td class="px-4 py-3 text-sm text-slate-700 font-medium">
+                        {{ log.process_name }}
+                    </td>
+                    <td class="px-4 py-3 text-sm text-slate-700">
+                        {{ log.pid }}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" class="px-4 py-8 text-center text-sm text-slate-500">
+                        No kill activity recorded yet.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+    <h1 class="text-2xl font-semibold text-slate-800">Snapshots</h1>
+    <a href="{% url 'process_list' %}" class="text-sm font-medium text-indigo-600 hover:text-indigo-700 transition-colors">
+        ← Back to processes
+    </a>
+</div>
+
+<div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden mb-8">
+    <div class="px-4 py-3 border-b border-slate-100 bg-slate-50/50">
+        <h2 class="text-sm font-medium text-slate-700">Saved snapshots</h2>
+    </div>
+    <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-slate-200">
+            <thead class="bg-slate-50">
+                <tr>
+                    <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Timestamp</th>
+                    <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Author</th>
+                    <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Processes</th>
+                    <th scope="col" class="px-4 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+                {% for snapshot in snapshots %}
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                    <td class="px-4 py-3 text-sm text-slate-700 whitespace-nowrap">
+                        {{ snapshot.created_at|date:"Y-m-d H:i:s" }}
+                    </td>
+                    <td class="px-4 py-3 text-sm text-slate-700">
+                        {{ snapshot.author.get_username }}
+                    </td>
+                    <td class="px-4 py-3 text-sm text-slate-700">
+                        {{ snapshot.data|length }}
+                    </td>
+                    <td class="px-4 py-3 text-sm text-right space-x-3">
+                        <a href="{% url 'snapshot_detail' pk=snapshot.id %}" class="font-medium text-indigo-600 hover:text-indigo-700 transition-colors">
+                            View
+                        </a>
+                        <a href="{% url 'snapshot_export_excel' pk=snapshot.id %}" class="font-medium text-emerald-600 hover:text-emerald-700 transition-colors">
+                            Export Excel
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" class="px-4 py-8 text-center text-sm text-slate-500">
+                        No snapshots yet. Take one from the Process Manager page.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+    <div class="px-4 py-3 border-b border-slate-100 bg-slate-50/50">
+        <h2 class="text-sm font-medium text-slate-700">Metrics over time</h2>
+        {% if chart_labels %}
+        <p class="text-xs text-slate-500 mt-0.5">Based on snapshots taken so far.</p>
+        {% endif %}
+    </div>
+    <div class="p-4">
+        {% if chart_labels %}
+        <div class="space-y-6">
+            <div>
+                <p class="text-xs font-medium text-slate-600 mb-2">CPU usage (sum % per snapshot)</p>
+                <div class="h-40">
+                    <canvas id="cpuChart"></canvas>
+                </div>
+            </div>
+            <div>
+                <p class="text-xs font-medium text-slate-600 mb-2">Memory usage (total MB)</p>
+                <div class="h-40">
+                    <canvas id="memoryChart"></canvas>
+                </div>
+            </div>
+            <div>
+                <p class="text-xs font-medium text-slate-600 mb-2">Number of processes</p>
+                <div class="h-40">
+                    <canvas id="processCountChart"></canvas>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <p class="text-sm text-slate-500 py-4">
+            No snapshots yet. Take one from the Process Manager page to see metrics here.
+        </p>
+        {% endif %}
+    </div>
+</div>
+
+{% if chart_labels %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    (function () {
+        const labels = {{ chart_labels|safe }};
+        const cpuData = {{ chart_cpu|safe }};
+        const memoryData = {{ chart_memory|safe }};
+        const processCountData = {{ chart_process_count|safe }};
+
+        if (!labels.length) return;
+
+        function makeChart(ctxId, label, data, color) {
+            const ctx = document.getElementById(ctxId);
+            if (!ctx) return;
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: label,
+                        data: data,
+                        borderColor: color,
+                        backgroundColor: color.replace('1)', '0.08)'),
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.3,
+                        pointRadius: 3,
+                        pointHoverRadius: 5,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: { intersect: false, mode: 'index' },
+                    scales: {
+                        x: {
+                            grid: { display: false },
+                            ticks: { maxRotation: 45, font: { size: 10 }, color: '#64748b' },
+                        },
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: '#f1f5f9' },
+                            ticks: { font: { size: 10 }, color: '#64748b' },
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                    }
+                }
+            });
+        }
+
+        makeChart('cpuChart', 'CPU (%)', cpuData, 'rgba(99, 102, 241, 1)');
+        makeChart('memoryChart', 'Memory (MB)', memoryData, 'rgba(16, 185, 129, 1)');
+        makeChart('processCountChart', 'Processes', processCountData, 'rgba(245, 158, 11, 1)');
+    })();
+</script>
+{% endif %}
+
+{% endblock %}

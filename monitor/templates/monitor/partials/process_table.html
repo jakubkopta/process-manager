@@ -1,0 +1,91 @@
+<div id="process-table"
+    hx-get="{% url 'process_list_partial' %}?{{ request.GET.urlencode }}"
+    hx-trigger="every 30s"
+    hx-target="this"
+    hx-swap="outerHTML"
+>
+
+    {% if success_message %}
+    <div class="mb-4 rounded-lg bg-emerald-50 border border-emerald-200 px-4 py-3 text-sm text-emerald-800" role="status">
+        {{ success_message }}
+    </div>
+    {% endif %}
+
+    {% if error_message %}
+    <div class="mb-4 rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-800" role="alert">
+        {{ error_message }}
+    </div>
+    {% endif %}
+
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="px-4 py-3 border-b border-slate-100 bg-slate-50/50 flex flex-wrap items-center justify-between gap-2">
+            <p class="text-sm text-slate-500">
+                Last refresh: {% now "Y-m-d H:i:s" %}
+            </p>
+            <button
+                hx-post="{% url 'take_snapshot' %}"
+                hx-target="#process-table"
+                hx-swap="outerHTML"
+                class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors"
+            >
+                Take Snapshot
+            </button>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-slate-200">
+                <thead class="bg-slate-50">
+                    <tr>
+                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                            <a href="{% url 'process_list' %}?{{ request.GET.urlencode }}&sort=pid" class="hover:text-slate-700 transition-colors">PID</a>
+                        </th>
+                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                            <a href="{% url 'process_list' %}?{{ request.GET.urlencode }}&sort=name" class="hover:text-slate-700 transition-colors">Name</a>
+                        </th>
+                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Status</th>
+                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Start Time</th>
+                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Duration</th>
+                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                            <a href="{% url 'process_list' %}?{{ request.GET.urlencode }}&sort=-cpu" class="hover:text-slate-700 transition-colors">CPU (%)</a>
+                        </th>
+                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                            <a href="{% url 'process_list' %}?{{ request.GET.urlencode }}&sort=-memory" class="hover:text-slate-700 transition-colors">Memory (MB)</a>
+                        </th>
+                        <th scope="col" class="px-4 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">Action</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    {% for process in processes %}
+                    <tr class="hover:bg-slate-50/80 transition-colors">
+                        <td class="px-4 py-3 text-sm text-slate-700">{{ process.pid }}</td>
+                        <td class="px-4 py-3 text-sm text-slate-700 font-medium">{{ process.name }}</td>
+                        <td class="px-4 py-3 text-sm text-slate-700">{{ process.status }}</td>
+                        <td class="px-4 py-3 text-sm text-slate-700">{{ process.start_time }}</td>
+                        <td class="px-4 py-3 text-sm text-slate-700">{{ process.duration }}</td>
+                        <td class="px-4 py-3 text-sm text-slate-700">{{ process.cpu }}</td>
+                        <td class="px-4 py-3 text-sm text-slate-700">{{ process.memory }}</td>
+                        <td class="px-4 py-3 text-right">
+                            <button
+                                hx-post="{% url 'kill_process' pid=process.pid %}"
+                                hx-confirm="Are you sure you want to kill this process?"
+                                hx-target="#process-table"
+                                hx-swap="outerHTML"
+                                class="inline-flex items-center px-2.5 py-1 text-xs font-medium text-white bg-red-500 rounded-lg hover:bg-red-600 transition-colors"
+                            >
+                                Kill
+                            </button>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="px-4 py-8 text-center text-sm text-slate-500">
+                            No processes found
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>

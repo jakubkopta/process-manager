@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+    <h1 class="text-2xl font-semibold text-slate-800">Process Manager</h1>
+    <div class="flex items-center gap-3">
+        <a href="{% url 'snapshot_list' %}" class="inline-flex items-center px-3 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors">
+            View snapshots
+        </a>
+        <a href="{% url 'kill_log_list' %}" class="inline-flex items-center px-3 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors">
+            Kill log
+        </a>
+    </div>
+</div>
+
+<div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 mb-6">
+    <p class="text-sm font-medium text-slate-700 mb-3">Filters</p>
+    <form method="get" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div>
+            <label for="id_pid" class="block text-xs font-medium text-slate-600 mb-1">PID</label>
+            <input type="text" name="pid" id="id_pid" value="{{ request.GET.pid }}"
+                class="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm">
+        </div>
+        <div>
+            <label for="id_name" class="block text-xs font-medium text-slate-600 mb-1">Name contains</label>
+            <input type="text" name="name" id="id_name" value="{{ request.GET.name }}"
+                class="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm">
+        </div>
+        <div>
+            <label for="id_status" class="block text-xs font-medium text-slate-600 mb-1">Status</label>
+            <select name="status" id="id_status"
+                class="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm">
+                <option value="">Any</option>
+                <option value="running" {% if request.GET.status == "running" %}selected{% endif %}>running</option>
+                <option value="sleeping" {% if request.GET.status == "sleeping" %}selected{% endif %}>sleeping</option>
+                <option value="stopped" {% if request.GET.status == "stopped" %}selected{% endif %}>stopped</option>
+                <option value="zombie" {% if request.GET.status == "zombie" %}selected{% endif %}>zombie</option>
+            </select>
+        </div>
+        <div class="flex items-end gap-2">
+            <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors shadow-sm">
+                Apply
+            </button>
+            <a href="{% url 'process_list' %}" class="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors">
+                Clear
+            </a>
+        </div>
+    </form>
+</div>
+
+<div
+    id="process-table"
+    hx-get="{% url 'process_list_partial' %}?{{ request.GET.urlencode }}"
+    hx-trigger="load, every 30s"
+    hx-target="this"
+    hx-swap="outerHTML"
+>
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-8 text-center text-slate-500">
+        Loading processes…
+    </div>
+</div>
+
+{% endblock %}
